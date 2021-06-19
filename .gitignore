@@ -1,5 +1,33 @@
+# log files
+*.log
+
+# package/archive files
+*.jar
+*.gz
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# virtual machine crash logs, see http://www/java.com/en/download/help/error_hotspot.xml
+hs_err_pid*
+
+# intelij prooject files
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# build files
 .gradle
-/build/
+build/
+out/
+bin/
+.shelf
+
+gradle/
 
 # Ignore Gradle GUI config
 gradle-app.setting

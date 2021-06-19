@@ -1,0 +1,16 @@
+{
+  "type": "record",
+  "namespace": "au.com.gritmed.pay",
+  "name": "Payment",
+  "version": 1,
+  "doc": "Payment messages used between miro-services part of various workflows",
+  "fields": [
+    {"name": "id", "type": "string", "logicalType": "UUID", "doc": "Unique payment identifier"},
+    {"name": "workflow", "type": ["null", "string"], "default": null, "doc": "Workflow identifier"},
+    {"name": "workflowStep", "type": ["null", "string"], "default": null, "doc": "Current Workflow step"},
+    {"name": "securityData", "type": {"type": "map", "values": "string"}, "doc": "Security data such as JWT"},
+    {"name": "payload", "type": ["null", "string"], "default": null, "doc": "Payment payload ISO20022 format"},
+    {"name": "history", "type": {"type": "map", "values": "string"}, "doc": "Payment processing history"},
+    {"name": "status", "type": "string", "default": "***********", "doc": "Current payment status"}
+  ]
+}

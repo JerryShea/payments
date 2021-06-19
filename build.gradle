@@ -1,0 +1,27 @@
+plugins {
+    id 'java'
+}
+
+group 'au.com.gritmed'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation (
+            'net.openhft:chronicle-queue:5.21ea42',
+            'org.apache.avro:avro:1.9.1',
+            'org.apache.commons:commons-lang3:3.8.1'
+    )
+    compileOnly 'org.projectlombok:lombok:1.18.6'
+    annotationProcessor('org.projectlombok:lombok:1.18.6')
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+}
+
+test {
+    useJUnitPlatform()
+}
