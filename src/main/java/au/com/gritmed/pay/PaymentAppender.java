@@ -37,12 +37,13 @@ public class PaymentAppender {
             var paymentIndex = documentContext.index();
 
             return String.valueOf(paymentIndex) + '/' + notifyLimitCheck(paymentIndex);
-        }
+        } // <-- this is when message is committed to paymentsQueue
     }
 
     private long notifyLimitCheck(long paymentIndex) {
         var appender = limitCheckQueue.acquireAppender();
         appender.writeText(String.valueOf(paymentIndex));
+        // writeText method commits this message to limitCheckQueue
         return appender.lastIndexAppended();
     }
 }

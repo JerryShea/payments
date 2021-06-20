@@ -3,6 +3,8 @@ package au.com.gritmed.pay;
 import net.openhft.chronicle.queue.ChronicleQueue;
 import net.openhft.chronicle.queue.ExcerptTailer;
 import net.openhft.chronicle.queue.impl.single.SingleChronicleQueueBuilder;
+import net.openhft.chronicle.threads.LongPauser;
+import net.openhft.chronicle.threads.Pauser;
 import org.apache.avro.generic.GenericRecord;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,6 +13,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 import static au.com.gritmed.pay.PaymentAppender.LIMIT_CHECK;
 import static au.com.gritmed.pay.PaymentAppender.PAYMENTS;
@@ -25,6 +28,7 @@ public class PaymentNotificationsConsumerTest {
     private static final String HISTORY = "history";
     private static final String STATUS = "status";
 
+    private final Pauser pauser = new LongPauser(0, 0, 1, 20_000, TimeUnit.MICROSECONDS);;
     private ExcerptTailer paymentsTailer;
     private ExcerptTailer notificationTailer;
     private AvroHelper avroHelper;
@@ -42,6 +46,7 @@ public class PaymentNotificationsConsumerTest {
         Payment payment;
         var counter = 0;
 
+        long lastTime = System.currentTimeMillis();
         do {
             paymentIndex = notificationTailer.readText();
             if (Objects.nonNull(paymentIndex)) {
@@ -50,13 +55,35 @@ public class PaymentNotificationsConsumerTest {
                 if (++counter % 10000 == 0) {
                     System.out.println(LocalDateTime.now() + ": Consumed " + counter + " payments");
                 }
+                if (counter % 100000 == 0) {
+                    showPause(lastTime);
+                    lastTime = System.currentTimeMillis();
+                }
             }
         } while (true);
 
     }
 
+    private void showPause(long lastTime) {
+        long now = System.currentTimeMillis();
+        long timeDelta = now - lastTime;
+        long timePaused = pauser.timePaused();
+        long countPaused = pauser.countPaused();
+        if (countPaused == 0)
+            System.out.println("no pauses");
+        else {
+            double averageTime = timePaused * 1000 / countPaused / 1e3;
+            double busy = Math.abs((timeDelta - timePaused) * 1000 / timeDelta / 10.0);
+            System.out.println("pauser avg pause: " + averageTime + " ms, "
+                    + "count=" + countPaused
+                    + (lastTime > 0 ? ", busy=" + busy + "%" : ""));
+        }
+    }
+
     private Payment readPayment(long paymentIndex) throws IOException {
-        paymentsTailer.moveToIndex(paymentIndex);
+        pauser.reset();
+        while (!paymentsTailer.moveToIndex(paymentIndex))
+            pauser.pause();
         try (var documentContext = paymentsTailer.readingDocument()) {
             if (Objects.isNull(documentContext.wire())) {
                 return null;
